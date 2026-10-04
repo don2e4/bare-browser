@@ -89,8 +89,8 @@ fetching anything: then only `bare --update-filters`, which you run yourself, up
 EasyList and EasyPrivacy are not bundled: they are downloaded from their publishers.
 
 What the converter skips: regex filters, scriptlets, procedural cosmetic filters (`:has-text` and
-friends), `$redirect`/`$csp`/`$removeparam`/`$badfilter`, and cosmetic exceptions. Sites whose ads
-need those to block (video sites, mostly) will still show ads; this is not uBlock Origin.
+friends), `$redirect`/`$csp`/`$removeparam`/`$badfilter`, and cosmetic exceptions. Ads that can only
+be blocked with those rule types still show; this is not uBlock Origin.
 
 ## Downloads and permissions
 

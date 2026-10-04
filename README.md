@@ -69,7 +69,7 @@ Read this before you try it:
   `Bare/0.1.0`.
 - **Not uBlock Origin.** The converter handles a conservative subset of the Adblock Plus syntax.
   Regex filters, scriptlets and procedural cosmetic filters are skipped and counted, never guessed at.
-  Ads that need those rules to block (mostly on video sites) still show.
+  Ads that can only be blocked with those rule types still show.
 - **Uneven test coverage.** The two logic crates have 138 unit and integration tests. The GUI crate
   has none; a 135-check headless script covers it (see [Tests](#tests)).
 

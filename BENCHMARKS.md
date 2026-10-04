@@ -1,6 +1,7 @@
 # Benchmarks
 
-Every number here was measured on **2026-10-04** on one machine, from the commit that added this file.
+Every number here was measured on **2026-10-04** on one machine, from the commit that added this file,
+except where a section says otherwise.
 The raw output is in [`docs/bench/`](docs/bench). To reproduce, see [the end of this file](#reproduce).
 
 These numbers are rough. They come from one desktop, a headless X server and software rendering, and
@@ -38,7 +39,7 @@ separate times ([`measure-1`](docs/bench/measure-1.txt), [`2`](docs/bench/measur
 | 5 tabs, all loaded | 541 MB | 540–561 MB | 26 |
 | the same 5 tabs after the 4 background tabs were discarded | 297 MB | 277–298 MB | 8 |
 | idle CPU on the home page, no web process (100 % = one core, over 10 s) | 0.0 % | 0.0–0.1 % | |
-| idle CPU with the 5 pages loaded ([`tools/idle-cpu.sh`](tools/idle-cpu.sh), [output](docs/bench/idle-cpu-5-tabs.txt)) | 0.0 % | 0.0–0.3 % | |
+| idle CPU with the 5 pages loaded ([`tools/idle-cpu.sh`](tools/idle-cpu.sh), [output](docs/bench/idle-cpu-5-tabs.txt)) | 0.0 % | 0.0–0.3 % | 32¹ |
 | start-up: `main()` to first frame presented, Bare's own clock | 249 ms | 247–256 ms | |
 
 | Firefox 156, fresh profile, the same 5 pages | median | range (3 runs) | processes |
@@ -57,8 +58,12 @@ What this does and doesn't show:
   "after discard" row has no Firefox equivalent.
 - **Idle CPU is a tie.** Both are near zero with the same five pages loaded. (`measure.sh` measures
   Bare's idle CPU on the home page, before any web page exists; that row alone would flatter Bare,
-  hence the separate five-page measurement.) An earlier version of this README reported 17.4 % for
-  Firefox, measured 30 s after a fresh-profile launch; that was Firefox's first-run work, not idle
+  hence the separate five-page measurement.)
+
+  ¹ `idle-cpu.sh` passes the five pages as command-line arguments instead of opening tabs one by
+  one with Ctrl+T as `measure.sh` does. That run had 32 processes, not 26; nobody has looked into
+  why yet. An earlier, unpublished measurement (2026-10-03) found
+  17.4 % for Firefox, 30 s after a fresh-profile launch; that was Firefox's first-run work, not idle
   cost. With 90 s to settle it is 0.3–0.7 %.
 - **Bare runs twice as many processes** (26 vs 13). WebKitGTK wraps every web process in two
   `bwrap` (bubblewrap sandbox) processes, and the sandbox adds an `xdg-dbus-proxy`. The helpers are
@@ -92,7 +97,7 @@ the obvious place to look.
 
 ## Content blocking cost
 
-**Not re-measured for this file.** On 2026-10-03, the run in the previous README compared the full
+**Not re-measured for this file.** An earlier, unpublished measurement on 2026-10-03 compared the full
 EasyList + EasyPrivacy against the built-in baseline. It used five alternating pairs with one tab
 open, and the converter emitted about 112,000 rules. The full lists added about 8 MB (+6 to +10 MB
 in each pair), idle CPU stayed 0.0 %, and the weekly refresh child process peaked near 130 MB for
