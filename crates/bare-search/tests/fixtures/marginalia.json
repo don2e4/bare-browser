@@ -1,0 +1,72 @@
+{
+ "license": "CC-BY-NC-SA 4.0",
+ "page": 1,
+ "pages": 11,
+ "query": "rust lifetimes",
+ "results": [
+  {
+   "url": "https://asquera.de/blog/2018-01-29/rust-lifetimes-for-the-uninitialised/",
+   "title": "Rust Lifetimes for the Uninitialised",
+   "description": "Maybe, they are truly Rust's Monads. Let's talk about what they are, where you encounter them and then how to get competent with them. This blog post requires only minor Rust knowledge. The intended audience are curious programmers in // A Lifetime",
+   "quality": 3.434251832937038,
+   "format": "html",
+   "resultsFromDomain": 5
+  },
+  {
+   "url": "https://www.jendrikillner.com/post/rust-game-part-7/",
+   "title": "Rust Game Series - Part 7 - Rust lifetimes and GPU Constant Allocator | Jendrik Illner - 3D Programmer",
+   "description": "Rust lifetimes and GPU Constant Allocator. Wed, Mar 11, 2020 In this part, I will be talking about how to write a custom memory allocator using Rust and D3D11. The concepts are applicable for general-purpose memory allocations but designed for...",
+   "quality": 3.589183690561181,
+   "format": "html",
+   "resultsFromDomain": 9
+  },
+  {
+   "url": "https://users.rust-lang.org/t/rust-lifetime-parameters-static-and-a/125254",
+   "title": "Rust Lifetime Parameters 'static and 'a - help - The Rust Programming Language Forum",
+   "description": "Rust lifetimes are scopes of loans. How long objects actually live for may be separate from that. Self-contained, not borrowing, types like. String. can live for as long as they want in whatever scope they want, and that is completely unrelated...",
+   "quality": 3.60882856420456,
+   "format": "html",
+   "resultsFromDomain": 2638
+  },
+  {
+   "url": "https://users.rust-lang.org/t/in-depth-tutorial-about-rust-lifetimes/139056",
+   "title": "In depth tutorial about Rust lifetimes - tutorials - The Rust Programming Language Forum",
+   "description": "Don't use lexical scopes as an analogy for Rust lifetimes. In my experience it leads to too much confusion and makes it too easy to conflate Rust lifetimes and drop scopes. Most common borrow checker errors can be explained in terms of what...",
+   "quality": 3.6244147220396865,
+   "format": "html",
+   "resultsFromDomain": 2638
+  },
+  {
+   "url": "https://www.ntietz.com/blog/rust-lifetimes-learning/",
+   "title": "Some things that make Rust lifetimes hard to learn | nicole@web",
+   "description": "Rust's lifetimes are different, though. The borrow checker uses a to do its work. These are super cool, and something that I don't understand particularly well. I'm familiar with how to use the borrow checker, but I don't know any of the theory...",
+   "quality": 3.6247968708506586,
+   "format": "html",
+   "resultsFromDomain": 6
+  },
+  {
+   "url": "https://ntietz.com/blog/rust-lifetimes-learning/",
+   "title": "Some things that make Rust lifetimes hard to learn | nicole@web",
+   "description": "Rust's lifetimes are different, though. The borrow checker uses a. linear type system. to do its work. These are super cool, and something that I don't understand particularly well. I'm familiar with how to use the borrow checker, but I don't...",
+   "quality": 3.6423230561309383,
+   "format": "html",
+   "resultsFromDomain": 6
+  },
+  {
+   "url": "https://cglab.ca/~abeinges/blah/rust-lifetimes-and-collections/",
+   "title": "Rust, Lifetimes, and Collections",
+   "description": "Rust, Lifetimes, and Collections Alexis Beingessner. Collections are hard. Using collections safely is even harder. Using collections safely and efficiently is even harder. And let's toss on, and not wanting to burn your computer to the ground...",
+   "quality": 3.649493078091233,
+   "format": "html",
+   "resultsFromDomain": 3
+  },
+  {
+   "url": "https://www.stackoverflow.com/questions/73600498",
+   "title": "rust lifetime &'a T",
+   "description": "rust lifetime, a T I am a beginner of rust, nowdays I have read the content of lifetime, and I wonder that for, a T, dose it mean the value of T having a lifetime of a or the Reference variable has a lifetime of a. Don't think of it as having...",
+   "quality": 3.6554371496090887,
+   "format": "html",
+   "resultsFromDomain": 3175
+  }
+ ]
+}

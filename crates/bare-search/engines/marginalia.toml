@@ -1,0 +1,15 @@
+# Marginalia Search public API: an independent index of the small, text-heavy web. Slow and
+# occasionally unavailable; that is what the per-engine timeout and backoff are for.
+name = "marginalia"
+shortcut = "mg"
+categories = ["general"]
+kind = "json"
+ua = "api"
+timeout_ms = 4000
+url = "https://api.marginalia.nu/public/search/{q}?count=10"
+results = "results"
+
+[fields]
+url = "{url}"
+title = "{title|text}"
+content = "{description|text}"

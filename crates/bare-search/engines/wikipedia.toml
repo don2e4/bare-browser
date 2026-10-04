@@ -1,0 +1,15 @@
+# MediaWiki search API (Wikipedia). Suggestion = "did you mean". Only the top 5: past that, full-text
+# matches are mostly noise ("Marion Cotillard" for a Rust query) and would interleave with real results.
+name = "wikipedia"
+shortcut = "w"
+categories = ["general"]
+kind = "json"
+ua = "api"
+url = "https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={q}&format=json&srlimit=5&utf8=1"
+results = "query.search"
+suggestion = "query.searchinfo.suggestion"
+
+[fields]
+url = "https://{lang}.wikipedia.org/wiki/{title|wiki}"
+title = "{title}"
+content = "{snippet|text}"

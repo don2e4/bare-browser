@@ -1,0 +1,13 @@
+# MediaWiki search API (Arch Wiki). Specialist engine: only used for `!aw` or `!it`.
+name = "archwiki"
+shortcut = "aw"
+categories = ["it"]
+kind = "json"
+ua = "api"
+url = "https://wiki.archlinux.org/api.php?action=query&list=search&srsearch={q}&format=json&srlimit=10&utf8=1"
+results = "query.search"
+
+[fields]
+url = "https://wiki.archlinux.org/title/{title|wiki}"
+title = "{title}"
+content = "{snippet|text}"

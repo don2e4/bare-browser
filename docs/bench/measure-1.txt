@@ -1,0 +1,23 @@
+binary: target/release/bare  (3.9M)
+content blocking: built-in baseline
+    115254 kB PSS  bare
+     31016 kB PSS  WebKitNetworkPr
+       142 kB PSS  bwrap
+       138 kB PSS  bwrap
+       672 kB PSS  xdg-dbus-proxy
+       149 kB PSS  bwrap
+       152 kB PSS  bwrap
+    136448 kB PSS  WebKitWebProces
+discard events logged: 4
+
+Bare                                         (median of 1)
+start-up (launch to window presented)             247 ms
+memory, 1 tab on the home page                    108 MB  (1 processes)
+memory, 5 tabs of local pages                     540 MB  (26 processes)
+memory, same 5 tabs after idle discard            277 MB  (8 processes)
+idle CPU (one core = 100%)                        0.0 %
+
+Firefox (fresh profile, the same 5 pages as 5 tabs, measured after 90 s)
+start-up to first window                         1007 ms
+memory, 5 tabs                                    668 MB  (13 processes)
+idle CPU                                          0.3 %

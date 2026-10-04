@@ -1,0 +1,8 @@
+parse bing (15 KB)                              257.5µs
+parse duckduckgo (32 KB)                        378.5µs
+parse wikipedia (3 KB)                           49.3µs
+parse marginalia (4 KB)                          26.0µs
+build the 7 engine definitions (startup)         18.3µs
+merge 4 engines' results                         24.3µs
+render the results page (27 results)             32.1µs
+results page size                                 22 KB

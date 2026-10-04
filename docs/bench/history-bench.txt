@@ -1,0 +1,6 @@
+inserted 200,000 rows in 5.3s
+search                    208.0µs per keystroke
+search a                  202.9µs per keystroke
+search site12               5.2ms per keystroke
+search topic 77 site        1.8ms per keystroke
+search zzzz-no-match       19.5ms per keystroke

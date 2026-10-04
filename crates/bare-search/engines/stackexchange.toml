@@ -1,0 +1,13 @@
+# Stack Exchange API (Stack Overflow). Specialist engine: `!so` or `!it`.
+name = "stackoverflow"
+shortcut = "so"
+categories = ["it"]
+kind = "json"
+ua = "api"
+url = "https://api.stackexchange.com/2.3/search/advanced?q={q}&site=stackoverflow&pagesize=10&order=desc&sort=relevance"
+results = "items"
+
+[fields]
+url = "{link}"
+title = "{title|text}"
+content = "{score} votes · {answer_count} answers · {tags}"

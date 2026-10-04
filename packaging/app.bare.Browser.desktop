@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Bare
+GenericName=Web Browser
+Comment=A web browser with no title bar: just the page
+Exec=bare %U
+Icon=app.bare.Browser
+Terminal=false
+StartupNotify=true
+StartupWMClass=bare
+Categories=Network;WebBrowser;
+MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+Keywords=web;browser;internet;search;

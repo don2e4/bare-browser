@@ -1,0 +1,3 @@
+[alias]
+# The Bare Search command-line tool: `cargo bs rust lifetimes`, `cargo bs probe`, `cargo bs engines`.
+bs = "run -q -p bare-search --example search --"

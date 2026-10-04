@@ -1,0 +1,3 @@
+idle CPU with 5 pages loaded: 0.0 % (32 processes)
+idle CPU with 5 pages loaded: 0.0 % (32 processes)
+idle CPU with 5 pages loaded: 0.3 % (32 processes)

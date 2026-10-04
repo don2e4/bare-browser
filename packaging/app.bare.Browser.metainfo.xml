@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.bare.Browser</id>
+  <name>Bare</name>
+  <summary>A web browser with no title bar: just the page</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      Bare is a small web browser built on WebKitGTK. Its window has no title bar and no tab strip: one
+      slim address bar sits above the page, and that is all the chrome there is.
+    </p>
+    <p>
+      It has its own search, derived from SearXNG and built in, so there is no search server to run. It
+      blocks ads and trackers inside the web engine, keeps idle tabs from using memory, and is
+      driven from the keyboard.
+    </p>
+  </description>
+  <launchable type="desktop-id">app.bare.Browser.desktop</launchable>
+  <provides>
+    <binary>bare</binary>
+  </provides>
+  <categories>
+    <category>Network</category>
+    <category>WebBrowser</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-10-03"/>
+  </releases>
+</component>

@@ -1,0 +1,77 @@
+.TH BARE 1 "October 2026" "Bare 0.1.0" "User Commands"
+.SH NAME
+bare \- a web browser with no title bar
+.SH SYNOPSIS
+.B bare
+[\fIaddress\fR | \fIsearch words\fR | \fIfile\fR]...
+.br
+.B bare \-\-update\-filters
+.SH DESCRIPTION
+Bare opens a window with no title bar: one slim address bar above the page. A single argument is
+opened as typed in the address bar (an address, an existing file, or a search); several arguments that
+are all addresses or files open one tab each; anything else is searched for as one phrase. If Bare is
+already running, the pages open as new tabs in that window.
+.PP
+Move the window by dragging the address bar (before you edit it) or the empty new-tab page; resize it
+from any edge or corner; or hold Alt and drag anywhere.
+.SH OPTIONS
+.TP
+.B \-\-update\-filters
+Download EasyList and EasyPrivacy, convert them for WebKit's content blocker, and store them. Bare does
+this by itself, in a child process, a few seconds after starting when it has no lists yet or they are
+a week old (a failed attempt is not repeated for six hours), and loads the result without a restart;
+set \fBfilter_updates = false\fR in the config file to stop that. Until the lists have been fetched, a
+small built-in list is used.
+.TP
+.BR \-h ", " \-\-help
+Print usage.
+.TP
+.BR \-V ", " \-\-version
+Print the version.
+.SH KEYS
+.TP
+.B Ctrl+L, Ctrl+K, F6
+Focus the address bar. With nothing typed it lists the other tabs.
+.TP
+.B Ctrl+T, Ctrl+W, Ctrl+Shift+T
+New tab, close tab, reopen the last closed tab.
+.TP
+.B Ctrl+Tab, Ctrl+Shift+Tab, Alt+1 ... Alt+9
+Next and previous tab; jump to a tab (Alt+9 is the last).
+.TP
+.B Ctrl+D
+Bookmark the page, or remove its bookmark.
+.TP
+.B Ctrl+F, F3, Shift+F3
+Find in the page, next match, previous match.
+.TP
+.B Alt+Left, Alt+Right, Ctrl+R, F5, Ctrl+Shift+R
+Back, forward, reload, reload bypassing the cache.
+.TP
+.B Ctrl+plus, Ctrl+minus, Ctrl+0
+Zoom in, out, reset.
+.TP
+.B F11
+Fullscreen.
+.TP
+.B Ctrl+Q
+Quit.
+.PP
+In the address bar, a leading \fB?\fR forces a search, \fB!w\fR \fBrust\fR searches only Wikipedia
+(\fB!gh\fR, \fB!so\fR, \fB!aw\fR, \fB!it\fR select others), and \fB:de\fR sets the language.
+.SH FILES
+.TP
+.I ~/.config/bare/config.toml
+Settings; every key is optional.
+.TP
+.I ~/.config/bare/bookmarks.txt
+Bookmarks: one "url title" per line, edit it by hand.
+.TP
+.I ~/.local/share/bare/
+History, cookies, site data, downloaded filter lists.
+.SH ENVIRONMENT
+.TP
+.B BARE_HOME
+Keep config, data and cache under this directory instead of the XDG locations.
+.SH LICENSE
+AGPL-3.0-or-later. Bare Search is derived from SearXNG.

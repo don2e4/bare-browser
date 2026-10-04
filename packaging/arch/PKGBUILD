@@ -1,0 +1,55 @@
+# Maintainer: Bare contributors
+#
+# Builds the working tree this file lives in (packaging/arch/ inside the repository) instead of a
+# downloaded tarball:   cd packaging/arch && makepkg -si
+pkgname=bare-browser
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='A web browser with no title bar: just the page'
+arch=('x86_64')
+license=('AGPL-3.0-or-later')
+depends=('webkitgtk-6.0' 'gtk4' 'pango' 'graphene' 'libsoup3' 'glib2' 'sqlite' 'gcc-libs' 'glibc')
+makedepends=('cargo')
+optdepends=(
+  'gst-plugins-good: video and audio playback'
+  'gst-plugins-bad: more media formats'
+  'gst-libav: H.264 and AAC'
+)
+# Link-time optimisation is configured in Cargo.toml.
+options=('!lto')
+
+_root() { realpath "$startdir/../.."; }
+
+pkgver() {
+  sed -n 's/^version = "\(.*\)"/\1/p' "$(_root)/Cargo.toml" | head -1
+}
+
+prepare() {
+  cd "$(_root)"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked || cargo fetch --locked --offline
+}
+
+build() {
+  cd "$(_root)"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR="$srcdir/target"
+  cargo build --frozen --release -p bare
+}
+
+check() {
+  cd "$(_root)"
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR="$srcdir/target"
+  cargo test --frozen --workspace
+}
+
+package() {
+  cd "$(_root)"
+  install -Dm755 "$srcdir/target/release/bare" "$pkgdir/usr/bin/bare"
+  install -Dm644 packaging/app.bare.Browser.desktop "$pkgdir/usr/share/applications/app.bare.Browser.desktop"
+  install -Dm644 resources/app.bare.Browser.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/app.bare.Browser.svg"
+  install -Dm644 packaging/app.bare.Browser.metainfo.xml "$pkgdir/usr/share/metainfo/app.bare.Browser.metainfo.xml"
+  install -Dm644 packaging/bare.1 "$pkgdir/usr/share/man/man1/bare.1"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 NOTICE "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

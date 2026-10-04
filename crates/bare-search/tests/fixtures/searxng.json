@@ -1,0 +1,41 @@
+{
+  "query": "rust lifetimes",
+  "number_of_results": 0,
+  "results": [
+    {
+      "url": "https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html",
+      "title": "Validating References with Lifetimes - The Rust Programming Language",
+      "content": "Lifetimes are another kind of <b>generic</b> that we&#39;ve already been using.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo", "brave"],
+      "positions": [1, 2],
+      "score": 8.0,
+      "category": "general"
+    },
+    {
+      "url": "https://doc.rust-lang.org/rust-by-example/scope/lifetime.html",
+      "title": "Lifetimes - Rust By Example",
+      "content": "A lifetime is a construct the compiler uses to ensure all borrows are valid.",
+      "engine": "brave",
+      "engines": ["brave"],
+      "positions": [3],
+      "score": 1.0,
+      "category": "general"
+    },
+    {
+      "url": "https://users.rust-lang.org/t/lifetime-elision/1",
+      "title": "Lifetime elision",
+      "content": "",
+      "engine": "bing",
+      "engines": ["bing"],
+      "positions": [4],
+      "score": 0.5,
+      "category": "general"
+    }
+  ],
+  "answers": [],
+  "corrections": ["rust lifetime"],
+  "infoboxes": [],
+  "suggestions": ["rust lifetimes explained"],
+  "unresponsive_engines": []
+}

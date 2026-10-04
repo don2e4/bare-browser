@@ -1,0 +1,17 @@
+# Ported from SearXNG's duckduckgo engine, using the HTML-only endpoint. Result links are
+# duckduckgo.com/l/?uddg=<target>; `fix_url = "ddg_uddg"` unwraps them. `web-result` excludes ads.
+name = "duckduckgo"
+shortcut = "ddg"
+categories = ["general"]
+kind = "html"
+url = "https://html.duckduckgo.com/html/?q={q}"
+results = "div.web-result"
+fix_url = "ddg_uddg"
+blocked_title = ["unusual traffic", "captcha"]
+# After a few searches in a row DDG answers HTTP 202 with a "select all squares containing a duck" page.
+blocked_body = ["anomaly.js", "bots use duckduckgo"]
+
+[fields]
+url = "a.result__a@href"
+title = "a.result__a"
+content = "a.result__snippet"

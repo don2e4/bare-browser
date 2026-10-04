@@ -1,0 +1,15 @@
+Bare
+Copyright (C) 2026 the Bare authors. Licensed under the GNU Affero General Public License,
+version 3 or (at your option) any later version. See LICENSE.
+
+Bare Search (crate `bare-search`) is a port of the SearXNG metasearch pipeline: the query syntax,
+engine definitions, result merging and scoring, and engine suspension. SearXNG is copyright its
+contributors and licensed under AGPL-3.0-or-later (https://github.com/searxng/searxng). The engine
+definitions in crates/bare-search/engines/ are derived from SearXNG's engines.
+
+Bare renders web content with WebKitGTK (LGPL-2.1+) through the `webkit6` and `gtk4` Rust bindings (MIT).
+
+Content filter lists: Bare's built-in list (resources/filters-builtin.txt) was written for Bare. The
+full lists that `bare --update-filters` downloads, EasyList and EasyPrivacy (https://easylist.to), are
+by their authors, dual-licensed GPLv3+ / CC BY-SA 3.0. They are fetched by the user on request and are
+not distributed with Bare.

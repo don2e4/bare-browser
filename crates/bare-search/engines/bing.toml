@@ -1,0 +1,15 @@
+# Ported from SearXNG's bing engine (HTML scrape). Result links are bing.com/ck/a redirects whose
+# `u` parameter is "a1" + base64url(target); `fix_url = "bing_ck"` unwraps them.
+name = "bing"
+shortcut = "b"
+categories = ["general"]
+kind = "html"
+# cc/mkt are required: without them Bing guesses a market from the IP and may answer a different query.
+url = "https://www.bing.com/search?q={q}&setlang={lang}&cc={cc}&mkt={mkt}"
+results = "li.b_algo"
+fix_url = "bing_ck"
+
+[fields]
+url = "h2 a@href"
+title = "h2 a"
+content = ".b_caption p, p.b_lineclamp2, .b_algoSlug"

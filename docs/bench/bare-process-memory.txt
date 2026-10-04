@@ -1,0 +1,6 @@
+Rss:              215712 kB
+Pss:              112090 kB
+Pss_Dirty:         71872 kB
+Pss_Anon:          64060 kB
+Pss_File:          40218 kB
+Pss_Shmem:          7812 kB

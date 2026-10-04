@@ -1,0 +1,79 @@
+/* Bare's only chrome: one slim URL bar. Colours come from the GTK theme. */
+window.bare { background: @theme_bg_color; }
+box.bare-frame { border: 1px solid alpha(@theme_fg_color, 0.18); }
+
+box.bare-bar {
+  min-height: 30px;
+  background: @theme_bg_color;
+  border-bottom: 1px solid alpha(@theme_fg_color, 0.08);
+}
+box.bare-bar entry.bare-url {
+  min-height: 30px;
+  margin: 0;
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+box.bare-bar entry.bare-url:focus-within { background: alpha(@theme_fg_color, 0.05); }
+
+progressbar.bare-progress { opacity: 0; transition: opacity 400ms ease-out; min-height: 2px; }
+progressbar.bare-progress.loading { opacity: 1; transition: none; }
+progressbar.bare-progress trough { min-height: 2px; background: transparent; border: none; box-shadow: none; }
+progressbar.bare-progress progress { min-height: 2px; border-radius: 0; background: @theme_selected_bg_color; }
+
+/* Open-tab count: there is no tab strip, so this is the only sign that other tabs exist. */
+label.bare-badge { font: 11px monospace; color: @theme_text_color; opacity: 0.55; margin: 0 4px; }
+label.bare-badge:hover { opacity: 1; }
+
+/* Suggestions under the URL bar. These use the theme's text/base pair (what entries use), which is
+   always a legible combination; the fg/bg pair is not guaranteed to be one. */
+box.bare-dropdown {
+  /* hangs just under the 30 px URL bar */
+  margin: 32px 0 0 24px; padding: 4px;
+  background: @theme_base_color; color: @theme_text_color;
+  border: 1px solid alpha(@theme_text_color, 0.18); border-radius: 8px;
+  box-shadow: 0 8px 24px alpha(black, 0.28);
+}
+box.bare-dropdown label { color: @theme_text_color; }
+box.bare-row { padding: 6px 10px; border-radius: 5px; }
+box.bare-row.selected { background: alpha(@theme_selected_bg_color, 0.22); }
+box.bare-row:hover { background: alpha(@theme_text_color, 0.07); }
+box.bare-dropdown label.bare-kind { font: 11px monospace; opacity: 0.55; }
+box.bare-dropdown label.bare-dim { font-size: 12px; opacity: 0.55; }
+
+/* Link under the pointer (bottom left) and short confirmations (bottom centre). */
+label.bare-status, label.bare-toast {
+  padding: 2px 9px; font-size: 12px;
+  color: @theme_text_color; background: alpha(@theme_base_color, 0.95);
+  border: 1px solid alpha(@theme_text_color, 0.18); border-radius: 5px;
+}
+label.bare-status { margin: 0 0 6px 6px; }
+label.bare-toast { margin-bottom: 28px; padding: 5px 14px; font-size: 13px; }
+
+/* The new-tab page (no web view behind it). */
+box.bare-home-page { background: @theme_base_color; }
+label.bare-home-title { font-size: 64px; font-weight: 300; color: @theme_text_color; }
+label.bare-home-tag { margin-bottom: 4px; opacity: 0.55; color: @theme_text_color; }
+label.bare-home-hint { margin-top: 40px; font-size: 12px; opacity: 0.5; color: @theme_text_color; }
+
+/* Find in page (top right of the page). */
+box.bare-find {
+  margin: 8px 12px 0 0; padding: 4px 6px;
+  background: @theme_base_color; color: @theme_text_color;
+  border: 1px solid alpha(@theme_text_color, 0.2); border-radius: 8px;
+  box-shadow: 0 4px 16px alpha(black, 0.22);
+}
+box.bare-find label { color: @theme_text_color; font-size: 12px; opacity: 0.6; }
+box.bare-find label.nomatch { color: #c0392b; opacity: 1; }
+box.bare-find button.bare-find-step { min-width: 24px; min-height: 24px; padding: 0; color: @theme_text_color; }
+
+/* The location-permission question under the URL bar. */
+box.bare-permission {
+  padding: 6px 24px; background: @theme_base_color; color: @theme_text_color;
+  border-bottom: 1px solid alpha(@theme_text_color, 0.15);
+}
+box.bare-permission label { color: @theme_text_color; font-size: 13px; }
+box.bare-permission button.bare-permission-button { min-height: 22px; padding: 2px 12px; }
