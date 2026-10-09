@@ -180,7 +180,8 @@ fn build_row(s: &Suggestion) -> gtk::Box {
     row
 }
 
-fn pretty_url(url: &str) -> String {
+/// An address without its scheme or trailing slash, for showing.
+pub(crate) fn pretty_url(url: &str) -> String {
     let u = url
         .strip_prefix("https://")
         .or_else(|| url.strip_prefix("http://"))

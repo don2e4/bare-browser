@@ -17,10 +17,17 @@ impl Inner {
     ) {
         let auto_hide = self.config.chrome == Chrome::Hidden;
         self.window.connect_fullscreened_notify({
-            let revealer = self.revealer.clone();
+            let weak = Rc::downgrade(self);
             let handles = handles.clone();
             move |w| {
-                revealer.set_reveal_child(!w.is_fullscreen() && !auto_hide);
+                let Some(s) = weak.upgrade() else { return };
+                s.revealer
+                    .set_reveal_child(!w.is_fullscreen() && !auto_hide);
+                // Fullscreen is just the page; the sidebar comes back with the window.
+                s.sidebar
+                    .widget
+                    .set_visible(!w.is_fullscreen() && s.sidebar_wanted.get());
+                s.sync_badge();
                 set_handles_visible(&handles, w);
             }
         });
@@ -28,9 +35,11 @@ impl Inner {
             let handles = handles.clone();
             move |w| set_handles_visible(&handles, w)
         });
-        let state_file = self.paths.window_file();
-        self.window.connect_close_request(move |w| {
-            save_state(w, &state_file);
+        let weak = Rc::downgrade(self);
+        self.window.connect_close_request(move |_| {
+            if let Some(s) = weak.upgrade() {
+                s.save_state();
+            }
             glib::Propagation::Proceed
         });
 
@@ -61,8 +70,9 @@ impl Inner {
         let on = |accels: &str, f: fn(&Rc<Inner>)| key(&c, self, accels, f);
 
         on("<Control>l|<Control>k|F6", |s| s.focus_bar());
+        on("F1", |s| s.toggle_sidebar());
         on("<Control>t", |s| {
-            s.open_tab(None, s.active_id(), true);
+            s.open_tab(None, None, true);
             if s.config.chrome == Chrome::Bar {
                 s.focus_bar();
             }
@@ -157,6 +167,29 @@ impl Inner {
         }
     }
 
+    pub(super) fn save_state(&self) {
+        // GTK4 keeps default-size in sync with the user's resizing, and leaves it alone while maximized.
+        let (width, height) = self.window.default_size();
+        if self.sidebar.widget.is_visible() {
+            self.sidebar_width.set(self.paned.position());
+        }
+        let file = self.paths.window_file();
+        // With `chrome = "hidden"` the sidebar starts hidden whatever was saved, so this session says
+        // nothing about whether the user wants it.
+        let sidebar = match self.config.chrome {
+            Chrome::Bar => self.sidebar_wanted.get(),
+            Chrome::Hidden => WindowState::load(&file).sidebar,
+        };
+        WindowState {
+            width,
+            height,
+            maximized: self.window.is_maximized(),
+            sidebar,
+            sidebar_width: self.sidebar_width.get(),
+        }
+        .save(&file);
+    }
+
     pub(super) fn jump_to(self: &Rc<Self>, n: usize) {
         let id = self.order.borrow().nth(n);
         if let Some(id) = id {
@@ -177,17 +210,6 @@ pub(super) fn key(c: &gtk::ShortcutController, inner: &Rc<Inner>, accels: &str, 
 
 pub(super) fn zoom(web: &WebView, delta: f64) {
     web.set_zoom_level((web.zoom_level() + delta).clamp(0.3, 5.0));
-}
-
-pub(super) fn save_state(window: &gtk::ApplicationWindow, file: &Path) {
-    // GTK4 keeps default-size in sync with the user's resizing, and leaves it alone while maximized.
-    let (width, height) = window.default_size();
-    WindowState {
-        width,
-        height,
-        maximized: window.is_maximized(),
-    }
-    .save(file);
 }
 
 pub(super) fn load_css() {

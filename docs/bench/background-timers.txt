@@ -1,0 +1,15 @@
+# 2026-10-09. CPU time used by Bare's web processes while busy.html (below) sits in a background tab,
+# with a static page in front (BARE_DISCARD_SECS=0, so nothing is discarded). Clock ticks are 1/100 s.
+# 'without' is Bare with WebKit's defaults for hidden pages (timers aligned to 1 s); 'with' adds
+# HiddenPageDOMTimerThrottlingAutoIncreases. The control has busy.html in front.
+
+control, busy tab in front, with:      web processes used 26/100 CPU seconds in 30 s
+background, 120 s, without:            web processes used 11/100 CPU seconds in 120 s
+background, 120 s, with:               web processes used 0/100 CPU seconds in 120 s
+background, 300 s, without:            web processes used 24/100 CPU seconds in 300 s
+background, 300 s, with:               web processes used 0/100 CPU seconds in 300 s
+
+== busy.html
+<!doctype html><meta charset="utf-8"><title>busy</title>
+<p>A timer every 50 ms doing a little work, like a page polling or animating in the background.</p>
+<script>let n = 0; setInterval(() => { let x = 0; for (let i = 0; i < 300000; i++) x += i; n++; }, 50);</script>

@@ -130,7 +130,7 @@ impl Inner {
 
     pub(super) fn navigate(self: &Rc<Self>, url: &str, new_tab: bool) {
         if new_tab {
-            self.open_tab(Some(url), self.active_id(), true);
+            self.open_tab(Some(url), None, true);
             return;
         }
         let Some(tab) = self.active_tab() else { return };

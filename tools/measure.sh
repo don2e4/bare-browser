@@ -121,6 +121,10 @@ printf '%-44s %8s MB  (%s processes)\n' "memory, 1 tab on the home page" "$(mb "
 printf '%-44s %8s MB  (%s processes)\n' "memory, 5 tabs of local pages" "$(mb "$(printf '%s\n' "${F[@]}" | median)")" "$FIVE_PROCS"
 printf '%-44s %8s MB  (%s processes)\n' "memory, same 5 tabs after idle discard" "$(mb "$(printf '%s\n' "${D[@]}" | median)")" "$DISC_PROCS"
 printf '%-44s %8s %%\n' "idle CPU on the home page (one core = 100%)" "$(printf '%s\n' "${I[@]}" | median)"
+if ((RUNS > 1)); then
+  each() { local v out=""; for v in "$@"; do out+=" $(mb "$v")"; done; echo "${out# }"; }
+  echo "each run: start-up ${S[*]} ms; home $(each "${H[@]}") MB; 5 tabs $(each "${F[@]}") MB; after discard $(each "${D[@]}") MB"
+fi
 
 # --- Firefox (optional) -----------------------------------------------------------------------------------
 if [[ ${FIREFOX:-0} == 1 ]]; then

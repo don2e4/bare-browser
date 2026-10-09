@@ -3,7 +3,11 @@
 use bare_core::{Paths, input, pages};
 use bare_search::Searcher;
 use gtk4::{gio, glib};
-use std::{cell::Cell, rc::Rc, sync::Arc};
+use std::{
+    cell::Cell,
+    rc::Rc,
+    sync::{Arc, OnceLock},
+};
 use webkit6::{
     CookieAcceptPolicy, CookiePersistentStorage, LoadEvent, NetworkError, NetworkSession,
     PolicyError, Settings, URISchemeRequest, UserContentManager, WebContext,
@@ -48,6 +52,10 @@ pub fn new_view(
     // Memory over instant Back: the back/forward page cache keeps whole pages (and the web processes
     // that rendered them) alive after you navigate away. Without it Back reloads from the HTTP cache.
     set_feature(&settings, "UsesBackForwardCache", false);
+    // A background page's timers already fire at most once a second; this stretches that out the
+    // longer it stays in the background (WebKit's own heuristic), so a page polling or animating in a
+    // tab you aren't looking at wakes up less and less.
+    set_feature(&settings, "HiddenPageDOMTimerThrottlingAutoIncreases", true);
 
     let view = match related {
         // A related view shares its opener's web process and network session.
@@ -69,9 +77,16 @@ pub fn new_view(
     View { view, failed }
 }
 
+/// The search engines, set up by the first search (on its thread) rather than at start-up.
+type LazySearcher = Arc<(Option<String>, OnceLock<Searcher>)>;
+
 /// Serve `bare://…` pages from inside the process (no server, no port). Real URIs, so they get
 /// proper history entries. Display-isolated: web pages can't embed or probe them.
-pub fn register_scheme(home_hint: bool, searcher: Arc<Searcher>) {
+///
+/// Called with the first web view, not at start-up: getting WebKit's context starts JavaScriptCore,
+/// which a window showing only the (native) new-tab page has no use for.
+pub fn register_scheme(home_hint: bool, instance: Option<String>) {
+    let searcher: LazySearcher = Arc::new((instance, OnceLock::new()));
     let Some(context) = WebContext::default() else {
         return;
     };
@@ -118,10 +133,12 @@ fn finish(request: &URISchemeRequest, html: &str) {
 
 /// Searching takes seconds, so it runs on its own thread and the page is handed back to the main
 /// loop when it is ready; the window stays responsive meanwhile.
-fn serve_search(request: &URISchemeRequest, searcher: Arc<Searcher>, query: String) {
+fn serve_search(request: &URISchemeRequest, searcher: LazySearcher, query: String) {
     let (tx, rx) = async_channel::bounded::<String>(1);
     std::thread::spawn(move || {
-        let response = searcher.search(&query);
+        let (instance, engines) = &*searcher;
+        let engines = engines.get_or_init(|| Searcher::builtin_with_instance(instance.as_deref()));
+        let response = engines.search(&query);
         crate::log!(
             "search: {} results from {} of {} engines",
             response.items.len(),

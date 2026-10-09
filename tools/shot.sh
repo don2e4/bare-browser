@@ -203,6 +203,9 @@ run_tabs() {
 echo "== tabs, bookmarks, history, suggestions, idle discard"
 export BARE_HOME="$TMP/bare-tabs" BARE_APP_ID="app.bare.Tabs$$" BARE_DISCARD_SECS=3 BARE_LOG=1
 mkdir -p "$BARE_HOME/config"
+# The clicks below aim at page and URL-bar coordinates of a window without the tab sidebar (run_tree
+# covers the sidebar), and the tab count only shows while the sidebar is hidden.
+printf 'sidebar=false\n' >"$BARE_HOME/config/window"
 SECOND="$PWD/tools/fixtures/second.html"
 start_bare "$FIXTURE"
 W=$(find_window "$BARE_PID"); sleep 1.5
@@ -407,6 +410,7 @@ xdotool key shift+Return
 check "Shift+Enter opens the focused result in a new tab" tt "find page"
 check "...and it was opened as a tab" bash -c '[ "$(grep -c "open tab" "$1")" -gt "$2" ]' _ "$TMP/bare.log" "$before"
 check "...as an external page, not one sharing the results page's process" bash -c 'grep "open tab" "$1" | tail -1 | grep -q "http://127.0.0.1"' _ "$TMP/bare.log"
+check "...under the results page in the tab tree" bash -c 'n=$(grep -a "open tab" "$1" | tail -1 | cut -d" " -f4); grep -a "tree:" "$1" | tail -1 | grep -q "── $n\$"' _ "$TMP/bare.log"
 xdotool key alt+1; sleep 0.5
 check "the results page is still in the first tab" tt "rust lifetimes"
 rm -f "$BARE_HOME/config/config.toml"
@@ -563,8 +567,91 @@ check "...and bringing it to the front" wait_until 10 title_is "$W" "Fixture pag
 kill "$BARE_PID" 2>/dev/null; sleep 1
 }
 
+run_tree() {
+echo "== tree tabs: subtabs and the sidebar"
+export BARE_HOME="$TMP/bare-tree" BARE_APP_ID="app.bare.Tree$$" BARE_DISCARD_SECS=0 BARE_LOG=1
+rm -rf "$BARE_HOME"; mkdir -p "$BARE_HOME/config"
+TREE="$PWD/tools/fixtures/tree.html"
+start_bare "$TREE"
+W=$(find_window "$BARE_PID"); sleep 1.5; xdotool windowfocus "$W"
+read -r x y w h <<<"$(geom "$W")"
+check "(setup) tab 1 shows the tree fixture" tt "Tree page"
+# -a: the log is text, but grep can take WebKit's and Mesa's output in it for binary.
+tree_is() { grep -a "tree:" "$TMP/bare.log" | tail -1 | grep -qxF "bare: tree: $1"; }
+last_switch_is() { grep -a "switch to tab" "$TMP/bare.log" | tail -1 | grep -qx "bare: switch to tab $1"; }
+show_tree() { grep -a "tree:" "$TMP/bare.log" | tail -1 | sed 's/^/        /'; }
+# The fixture's link (it opens the fixture again, target=_blank), to the right of the 240 px sidebar.
+link() { xdotool mousemove $((x + 240 + 160)) $((y + 30 + 320)); sleep 0.2; xdotool click "$@" 1; sleep 1.2; }
+# Sidebar rows are 24 px tall, under the 31 px bar and 4 px of padding.
+row() { echo $((y + 31 + 4 + 24 * $1 + 12)); }
+
+link
+check "a target=_blank link opens a subtab under the tab it was in" wait_until 5 tree_is "1 | └── 2" || show_tree
+link
+check "...and a link in the subtab opens a sub-subtab" wait_until 5 tree_is "1 | └── 2 |     └── 3" || show_tree
+xdotool key ctrl+t; sleep 0.5
+check "Ctrl+T opens a top-level tab, at the end" wait_until 5 tree_is "1 | └── 2 |     └── 3 | 4" || show_tree
+xdotool key alt+1; sleep 0.5
+check "(setup) Alt+1: back on tab 1" wait_until 5 last_switch_is 1
+xdotool mousemove $((x + 240 + 160)) $((y + 30 + 320)); sleep 0.2
+xdotool keydown ctrl; xdotool click 1; xdotool keyup ctrl; sleep 1.2
+check "Ctrl+click opens a background subtab, after its older siblings" wait_until 5 tree_is "1 | ├── 2 | │   └── 3 | └── 5 | 4" || show_tree
+check "...and tab 1 stays in front" last_switch_is 1
+import -window root "$OUT/14-tree.png" 2>/dev/null
+xdotool key ctrl+Tab; sleep 0.4
+check "Ctrl+Tab walks the tree top to bottom (1 -> 2)" wait_until 5 last_switch_is 2
+xdotool key alt+9; sleep 0.4
+check "Alt+9 jumps to the last row (tab 4, a new tab)" tt "Bare"
+xdotool key Escape; sleep 0.3   # a new tab focuses the URL bar, whose switcher list covers the sidebar's top
+
+xdotool mousemove $((x + 80)) "$(row 0)"; sleep 0.2; xdotool click 1
+check "clicking a row in the sidebar switches to its tab" wait_until 5 last_switch_is 1
+xdotool mousemove $((x + 80)) "$(row 4)"; sleep 0.2; xdotool click 2; sleep 0.6
+check "middle-clicking a row closes its tab" wait_until 5 tree_is "1 | ├── 2 | │   └── 3 | └── 5" || show_tree
+xdotool mousemove $((x + 80)) "$(row 1)"; sleep 0.2; xdotool click --repeat 2 --delay 80 1; sleep 0.6
+check "double-clicking a parent row folds its subtabs (+1)" wait_until 5 tree_is "1 | ├── 2 +1 | └── 5" || show_tree
+xdotool key ctrl+Tab; sleep 0.4
+check "Ctrl+Tab skips the folded subtab (2 -> 5)" wait_until 5 last_switch_is 5
+xdotool key alt+2; sleep 0.4
+check "(setup) Alt+2 is tab 2 again" wait_until 5 last_switch_is 2
+xdotool key ctrl+w; sleep 0.6
+check "closing a parent moves its subtab up into its place" wait_until 5 tree_is "1 | ├── 3 | └── 5" || show_tree
+xdotool key ctrl+shift+t; sleep 1
+check "Ctrl+Shift+T reopens a closed subtab under its parent" wait_until 5 tree_is "1 | ├── 3 | ├── 5 | └── 6" || show_tree
+# The fixture's other link is an ordinary one (no target=_blank): WebKit hands a middle- or Ctrl+click on
+# it over as a plain navigation, which Bare must turn into a tab itself.
+xdotool mousemove $((x + 240 + 150)) $((y + 30 + 445)); sleep 0.2; xdotool click 2; sleep 1.2
+check "middle-clicking an ordinary link opens it as a subtab" wait_until 5 tree_is "1 | ├── 3 | ├── 5 | └── 6 |     └── 7" || show_tree
+xdotool keydown ctrl; xdotool click 1; xdotool keyup ctrl; sleep 1.2
+check "...and so does Ctrl+click" wait_until 5 tree_is "1 | ├── 3 | ├── 5 | └── 6 |     ├── 7 |     └── 8" || show_tree
+check "...both behind: the tab stays in front" bash -c '[ "$(xdotool getwindowname "$1")" = "Tree page" ]' _ "$W"
+
+# F1, and the sidebar standing in for a title bar. (x+100, y+200) is empty sidebar when it shows,
+# and the page's blue background when it doesn't.
+side_px=$(pixel $((x + 100)) $((y + 200)))
+xdotool key F1; sleep 0.6
+page_px=$(pixel $((x + 100)) $((y + 200)))
+check "F1 hides the sidebar ($side_px -> $page_px)" [ "$page_px" = "#335577" ] && [ "$side_px" != "$page_px" ]
+check "...(the log agrees)" log_has "sidebar: hidden"
+xdotool key ctrl+q
+check "(setup) Ctrl+Q quits" wait_until 5 bash -c '! kill -0 "$1" 2>/dev/null' _ "$BARE_PID"
+check "the hidden sidebar is remembered (window file)" grep -qx "sidebar=false" "$BARE_HOME/config/window"
+start_bare "$TREE"
+W=$(find_window "$BARE_PID"); sleep 1.5; xdotool windowfocus "$W"
+read -r x y w h <<<"$(geom "$W")"
+check "...and stays hidden after a restart" [ "$(pixel $((x + 100)) $((y + 200)))" = "#335577" ]
+xdotool key F1; sleep 0.6
+check "F1 shows it again" [ "$(pixel $((x + 100)) $((y + 200)))" = "$side_px" ]
+read -r bx by _ _ <<<"$(geom "$W")"
+drag $((bx + 100)) $((by + h - 120)) 60 40; sleep 0.6
+read -r ax ay _ _ <<<"$(geom "$W")"
+check "dragging the empty space under the tabs moves the window ($bx,$by -> $ax,$ay)" [ $((ax - bx)) -ge 45 ] && [ $((ay - by)) -ge 30 ]
+kill "$BARE_PID" 2>/dev/null; sleep 1
+}
+
 if [[ ${ONLY:-all} == all ]]; then run_basic; fi
 if [[ ${ONLY:-all} == all || ${ONLY:-} == tabs ]]; then run_tabs; fi
+if [[ ${ONLY:-all} == all || ${ONLY:-} == tree ]]; then run_tree; fi
 if [[ ${ONLY:-all} == all || ${ONLY:-} == features ]]; then run_features; fi
 if [[ ${ONLY:-all} == all || ${ONLY:-} == updates ]]; then run_updates; fi
 if [[ ${ONLY:-all} == all || ${ONLY:-} == moving ]]; then run_moving; fi

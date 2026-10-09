@@ -1,0 +1,110 @@
+# 2026-10-09. A minimal Python + WebKitGTK 2.52.6 program (no Bare code): one WebView, load_uri() to
+# a local file, then four HTTP pages on four different hosts (127.0.0.1, localhost, 127.0.0.2,
+# 127.0.0.3), 2.5 s apart; then the number of WebKitWebProcess processes every 20 s. Back/forward
+# cache off (UsesBackForwardCache = false), as Bare sets it.
+
+== cache model DOCUMENT_BROWSER
+  after file://<repository>/tools/fixtures/hello.html: 1 web processes
+  after http://127.0.0.1:31202/find.html: 2 web processes
+  after http://localhost:31202/find.html: 4 web processes
+  after http://127.0.0.2:31202/find.html: 6 web processes
+  after http://127.0.0.3:31202/find.html: 8 web processes
+  20 s later: 8 web processes
+  40 s later: 8 web processes
+  60 s later: 8 web processes
+  80 s later: 8 web processes
+  100 s later: 8 web processes
+  120 s later: 8 web processes
+  140 s later: 8 web processes
+  160 s later: 8 web processes
+  180 s later: 8 web processes
+  200 s later: 8 web processes
+  220 s later: 8 web processes
+  240 s later: 8 web processes
+  260 s later: 8 web processes
+  280 s later: 8 web processes
+  300 s later: 5 web processes
+  320 s later: 5 web processes
+  340 s later: 5 web processes
+
+== cache model WEB_BROWSER (the default)
+  after file://<repository>/tools/fixtures/hello.html: 1 web processes
+  after http://127.0.0.1:31906/find.html: 2 web processes
+  after http://localhost:31906/find.html: 4 web processes
+  after http://127.0.0.2:31906/find.html: 6 web processes
+  after http://127.0.0.3:31906/find.html: 8 web processes
+  20 s later: 8 web processes
+  40 s later: 8 web processes
+  60 s later: 8 web processes
+  80 s later: 8 web processes
+  100 s later: 8 web processes
+  120 s later: 8 web processes
+  140 s later: 8 web processes
+  160 s later: 8 web processes
+  180 s later: 8 web processes
+  200 s later: 8 web processes
+  220 s later: 8 web processes
+  240 s later: 8 web processes
+  260 s later: 8 web processes
+  280 s later: 8 web processes
+  300 s later: 5 web processes
+  320 s later: 5 web processes
+  340 s later: 5 web processes
+
+
+== Bare 0.1.0 and 0.2.0 (the same steps in the URL bar of one tab), process tree and PSS
+start: 8 processes (1 web processes), 279 MB PSS
+after 4 cross-site navigations: 50 processes (8 web processes), 546 MB PSS
+(identical for both versions, and with ProcessSwapOnCrossSiteNavigation or the cache model changed)
+
+== the program, run from the repository: python3 cross-site.py PORT 'docbrowser nobf' with WAITS=340
+== in the environment ('nobf' alone for the default cache model); tools/fixtures/server.py PORT serves the pages
+import gi, os, sys
+gi.require_version('Gtk','4.0'); gi.require_version('WebKit','6.0')
+from gi.repository import Gtk, WebKit, GLib
+port = sys.argv[1]
+mode = sys.argv[2] if len(sys.argv) > 2 else ''
+ctx = WebKit.WebContext.get_default()
+if 'docbrowser' in mode: ctx.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER)
+if 'viewer' in mode: ctx.set_cache_model(WebKit.CacheModel.DOCUMENT_VIEWER)
+def count():
+    me = os.getpid(); kids = {}
+    for p in os.listdir('/proc'):
+        if p.isdigit():
+            try:
+                pp = int(open(f'/proc/{p}/stat').read().rsplit(')',1)[1].split()[1]); kids.setdefault(pp,[]).append(int(p))
+            except Exception: pass
+    todo=[me]; n=0
+    while todo:
+        x=todo.pop(); todo+=kids.get(x,[])
+        try:
+            if open(f'/proc/{x}/cmdline').read().startswith('/usr/lib/webkitgtk-6.0/WebKitWebProcess'): n+=1
+        except Exception: pass
+    return n
+urls = ['file://' + os.path.abspath('tools/fixtures/hello.html'), f'http://127.0.0.1:{port}/find.html', f'http://localhost:{port}/find.html', f'http://127.0.0.2:{port}/find.html', f'http://127.0.0.3:{port}/find.html']
+app = Gtk.Application(application_id=f'test.mini{os.getpid()}')
+def act(app):
+    win = Gtk.ApplicationWindow(application=app, default_width=800, default_height=600)
+    s = WebKit.Settings()
+    if 'nobf' in mode:
+        fl = WebKit.Settings.get_all_features()
+        for i in range(fl.get_length()):
+            f = fl.get(i)
+            if f.get_identifier() == 'UsesBackForwardCache': s.set_feature_enabled(f, False)
+    v = WebKit.WebView(settings=s); win.set_child(v); win.present()
+    state = {'i': 0}
+    def step():
+        if state['i'] < len(urls):
+            v.load_uri(urls[state['i']]); state['i'] += 1
+            GLib.timeout_add(2500, lambda: (print(f'  after {urls[state["i"]-1]}: {count()} web processes', flush=True), step(), False)[2])
+        else:
+            state['t'] = 0
+            def later():
+                state['t'] += 20
+                print(f'  {state["t"]} s later: {count()} web processes', flush=True)
+                if state['t'] >= int(os.environ.get('WAITS', '0')): app.quit(); return False
+                return True
+            GLib.timeout_add(20000, later)
+        return False
+    step()
+app.connect('activate', act); app.run([])

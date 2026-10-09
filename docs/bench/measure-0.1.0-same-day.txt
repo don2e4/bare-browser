@@ -1,0 +1,14 @@
+# 2026-10-09: Bare 0.1.0 (commit 27bce35, release build), measured the same day as 0.2.0 for comparison.
+binary: bare 0.1.0  (3.9M)
+content blocking: built-in baseline
+discard events logged: 4
+discard events logged: 4
+discard events logged: 4
+
+Bare                                         (median of 3)
+start-up (launch to window presented)             254 ms
+memory, 1 tab on the home page                    116 MB  (1 processes)
+memory, 5 tabs of local pages                     571 MB  (26 processes)
+memory, same 5 tabs after idle discard            309 MB  (8 processes)
+idle CPU on the home page (one core = 100%)       0.0 %
+each run: start-up 249 254 256 ms; home 116 116 118 MB; 5 tabs 571 570 572 MB; after discard 309 307 309 MB

@@ -73,8 +73,9 @@ impl UrlBar {
         self.focused.get()
     }
 
-    pub fn set_tab_count(&self, n: usize) {
-        self.badge.set_visible(n > 1);
+    /// `shown`: whether to show the count at all (the tab sidebar, when it is open, already does).
+    pub fn set_tab_count(&self, n: usize, shown: bool) {
+        self.badge.set_visible(shown && n > 1);
         self.badge.set_text(&n.to_string());
     }
 

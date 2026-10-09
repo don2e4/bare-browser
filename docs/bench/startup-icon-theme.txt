@@ -1,0 +1,9 @@
+# 2026-10-09. Start-up: launch to window presented, Bare's own clock (BARE_LOG 'window presented'),
+# 5 launches each, fresh BARE_HOME, Xvfb + Openbox, GSK_RENDERER=cairo. The icon theme is the one
+# GTK uses: Papirus-Light is this machine's (~/.config/gtk-4.0/settings.ini), Adwaita is GTK's own,
+# chosen with XDG_CONFIG_HOME pointing at a settings.ini that names it.
+
+Bare 0.1.0, papirus: 276 270 272 275 280  ms
+Bare 0.1.0, adwaita: 75 76 75 83 80  ms
+Bare 0.2.0, papirus: 77 73 73 76 73  ms
+Bare 0.2.0, adwaita: 71 72 72 70 67  ms

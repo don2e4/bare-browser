@@ -3,7 +3,7 @@
 # Builds the working tree this file lives in (packaging/arch/ inside the repository) instead of a
 # downloaded tarball:   cd packaging/arch && makepkg -si
 pkgname=bare-browser
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc='A web browser with no title bar: just the page'
 arch=('x86_64')
@@ -47,6 +47,7 @@ package() {
   install -Dm755 "$srcdir/target/release/bare" "$pkgdir/usr/bin/bare"
   install -Dm644 packaging/app.bare.Browser.desktop "$pkgdir/usr/share/applications/app.bare.Browser.desktop"
   install -Dm644 resources/app.bare.Browser.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/app.bare.Browser.svg"
+  install -Dm644 resources/app.bare.Browser-symbolic.svg "$pkgdir/usr/share/icons/hicolor/symbolic/apps/app.bare.Browser-symbolic.svg"
   install -Dm644 packaging/app.bare.Browser.metainfo.xml "$pkgdir/usr/share/metainfo/app.bare.Browser.metainfo.xml"
   install -Dm644 packaging/bare.1 "$pkgdir/usr/share/man/man1/bare.1"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

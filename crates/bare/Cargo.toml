@@ -13,7 +13,7 @@ path = "src/main.rs"
 [dependencies]
 async-channel = "2.5.0"
 bare-core = { path = "../bare-core" }
-bare-search = { version = "0.1.0", path = "../bare-search" }
+bare-search = { version = "0.2.0", path = "../bare-search" }
 gtk4 = { version = "0.11", features = ["v4_12"] }
 ureq = "3.4.2"
 webkit6 = { version = "0.6", features = ["v2_52"] }

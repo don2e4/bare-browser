@@ -1,30 +1,36 @@
 //! The frameless window: no title bar, no header bar. A slim URL bar on top of the page, plus the
 //! things a title bar normally provides that a frameless window must supply itself (resize edges,
-//! drag-to-move, close/fullscreen keys). Tabs have no strip: a count in the URL bar shows that
-//! there are several, and the URL bar's dropdown is the tab switcher.
+//! drag-to-move, close/fullscreen keys). Tabs have no strip: a sidebar on the left draws them as a
+//! tree (F1 hides it), and the URL bar's dropdown is also a tab switcher.
 
 use crate::{
-    dropdown::Dropdown, filters::Filters, findbar::FindBar, log, permissions::PermissionBar,
-    tabs::Tab, urlbar::UrlBar, web,
+    dropdown::{Dropdown, pretty_url},
+    filters::Filters,
+    findbar::FindBar,
+    log,
+    permissions::PermissionBar,
+    sidebar::{self, Sidebar},
+    tabs::Tab,
+    urlbar::UrlBar,
+    web,
 };
 use bare_core::{
     Bookmarks, Chrome, Config, History, Paths, Target, WindowState, downloads, input,
     suggest::{self, Kind, Suggestion, TabInfo},
-    tabs::{TabId, TabOrder},
+    tabs::{TabId, TabTree},
 };
-use bare_search::Searcher;
 use gtk4::{self as gtk, gdk, glib, prelude::*};
 use std::{
     cell::{Cell, OnceCell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     path::Path,
     rc::Rc,
-    sync::Arc,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use webkit6::{
-    FindOptions, GeolocationPermissionRequest, LoadEvent, NavigationPolicyDecision, NetworkSession,
-    PermissionRequest, PolicyDecisionType, ResponsePolicyDecision, WebView, prelude::*,
+    FindOptions, GeolocationPermissionRequest, LoadEvent, NavigationPolicyDecision, NavigationType,
+    NetworkSession, PermissionRequest, PolicyDecisionType, ResponsePolicyDecision, WebView,
+    prelude::*,
 };
 
 mod bar;
@@ -39,6 +45,10 @@ use self::home::build_home;
 /// Closed tabs remembered for Ctrl+Shift+T.
 const KEEP_CLOSED: usize = 10;
 const SUGGESTIONS: usize = 8;
+/// How long after the window first appears it gets its icon (see `main`).
+const ICON_DELAY: Duration = Duration::from_millis(1000);
+/// How long after start-up an old history starts being indexed (see `index_history`).
+const HISTORY_INDEX_DELAY_SECS: u32 = 2;
 /// How long after start-up Bare checks whether its filter lists need refreshing.
 const FILTER_UPDATE_DELAY_SECS: u32 = 5;
 
@@ -68,6 +78,13 @@ struct Inner {
     session: OnceCell<NetworkSession>,
     stack: gtk::Stack,
     bar: UrlBar,
+    sidebar: Sidebar,
+    /// Holds the sidebar and the page side by side; its handle resizes the sidebar.
+    paned: gtk::Paned,
+    /// Whether the user wants the sidebar (F1; with `chrome = "hidden"` it starts hidden), and how
+    /// wide; saved with the window size.
+    sidebar_wanted: Cell<bool>,
+    sidebar_width: Cell<i32>,
     revealer: gtk::Revealer,
     dropdown: Dropdown,
     progress: gtk::ProgressBar,
@@ -77,9 +94,10 @@ struct Inner {
     config: Config,
     paths: Paths,
     tabs: RefCell<HashMap<TabId, Rc<Tab>>>,
-    order: RefCell<TabOrder>,
+    order: RefCell<TabTree>,
     next_id: Cell<TabId>,
-    closed: RefCell<Vec<String>>,
+    /// Recently closed tabs, newest last: the address and the tab it was under.
+    closed: RefCell<VecDeque<(String, Option<TabId>)>>,
     bookmarks: RefCell<Bookmarks>,
     history: Option<History>,
     filters: Filters,
@@ -93,7 +111,14 @@ struct Inner {
 
 impl Browser {
     pub fn new(app: &gtk::Application, paths: &Paths, config: &Config) -> Rc<Self> {
+        log!(
+            "startup: GTK ready {} ms after launch",
+            crate::STARTED.elapsed().as_millis()
+        );
         load_css();
+        // Unname the default icon `main` named, so showing the window doesn't wait for the icon theme.
+        // SAFETY: GTK copies the name; NULL means none (the safe binding takes only a `&str`).
+        unsafe { gtk::ffi::gtk_window_set_default_icon_name(std::ptr::null()) };
 
         let state = WindowState::load(&paths.window_file());
         let window = gtk::ApplicationWindow::builder()
@@ -108,10 +133,6 @@ impl Browser {
             window.maximize();
         }
 
-        let searcher = Arc::new(Searcher::builtin_with_instance(
-            config.search.instance.as_deref(),
-        ));
-        web::register_scheme(config.home_hint, searcher);
         let filters = Filters::start(paths, config.filters);
         let bar = UrlBar::new();
         let dropdown = Dropdown::new();
@@ -166,12 +187,27 @@ impl Browser {
             page.set_measure_overlay(w, false);
         }
 
+        let sidebar = Sidebar::new();
+        let sidebar_shown = state.sidebar && config.chrome == Chrome::Bar;
+        sidebar.widget.set_visible(sidebar_shown);
+        let paned = gtk::Paned::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .css_classes(["bare-paned"])
+            .start_child(&sidebar.widget)
+            .end_child(&page)
+            .resize_start_child(false)
+            .shrink_start_child(false)
+            .shrink_end_child(false)
+            .position(state.sidebar_width)
+            .vexpand(true)
+            .build();
+
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .build();
         column.append(&revealer);
         column.append(&permission.widget);
-        column.append(&page);
+        column.append(&paned);
         if config.border {
             column.add_css_class("bare-frame");
         }
@@ -196,6 +232,10 @@ impl Browser {
             session: OnceCell::new(),
             stack,
             bar,
+            sidebar,
+            paned,
+            sidebar_wanted: Cell::new(sidebar_shown),
+            sidebar_width: Cell::new(state.sidebar_width),
             revealer,
             dropdown,
             progress,
@@ -218,11 +258,13 @@ impl Browser {
         });
 
         inner.wire_bar();
+        inner.wire_sidebar();
         inner.wire_window(&handles, &page);
         inner.wire_shortcuts();
         inner.wire_find();
         inner.wire_permissions();
         inner.start_discard_timer();
+        inner.index_history();
         if config.filter_updates {
             // Once the first page has had the start-up to itself.
             let weak = Rc::downgrade(&inner);
@@ -250,22 +292,29 @@ impl Browser {
                 inner.filters.wait_ready(Duration::from_millis(250));
             }
             // The first page is the tab you see; any others open behind it, in order.
-            let mut previous = inner.open_tab(urls.first().map(String::as_str), None, true);
+            inner.open_tab(urls.first().map(String::as_str), None, true);
             for url in urls.iter().skip(1) {
-                previous = inner.open_tab(Some(url), Some(previous), false);
+                inner.open_tab(Some(url), None, false);
             }
             if urls.is_empty() && inner.config.chrome == Chrome::Bar {
                 inner.bar.focus();
             }
-            self.started.set(true);
         } else {
             // Handed to a running Bare: every page opens as a new tab, the first one brought forward.
-            let mut previous = inner.active_id();
             for (i, url) in urls.iter().enumerate() {
-                previous = Some(inner.open_tab(Some(url), previous, i == 0));
+                inner.open_tab(Some(url), None, i == 0);
             }
         }
         inner.window.present();
+        if !self.started.replace(true) {
+            // By now the icon theme has loaded in the background, so this costs a millisecond or two.
+            let weak = inner.window.downgrade();
+            glib::timeout_add_local_once(ICON_DELAY, move || {
+                if let Some(w) = weak.upgrade() {
+                    w.set_icon_name(Some(crate::APP_ID));
+                }
+            });
+        }
         log!(
             "startup: window presented {} ms after launch",
             crate::STARTED.elapsed().as_millis()
@@ -292,9 +341,11 @@ impl Inner {
         self.active_tab().and_then(|t| t.view.borrow().clone())
     }
 
-    /// The network session, created (and its downloads wired up) the first time a page is needed.
+    /// The network session, created (and its downloads wired up, and the `bare://` pages registered)
+    /// the first time a page is needed.
     fn session(self: &Rc<Self>) -> &NetworkSession {
         self.session.get_or_init(|| {
+            web::register_scheme(self.config.home_hint, self.config.search.instance.clone());
             let session = web::new_session(&self.paths);
             self.wire_downloads(&session);
             session
@@ -310,9 +361,94 @@ impl Inner {
         let title = tab.title.borrow();
         self.window
             .set_title(Some(if title.is_empty() { "Bare" } else { &title }));
-        self.bar.set_tab_count(self.order.borrow().len());
+        self.sync_badge();
         self.link_label.set_visible(false);
         self.sync_progress(&tab);
+    }
+
+    /// A history from before 0.2.0 too big to index while opening (seconds, for a big one) is indexed
+    /// on another thread, shortly after start-up; searches use the index once it is done.
+    fn index_history(self: &Rc<Self>) {
+        if !self.history.as_ref().is_some_and(History::needs_index) {
+            return;
+        }
+        let weak = Rc::downgrade(self);
+        let path = self.paths.history_file();
+        glib::timeout_add_seconds_local_once(HISTORY_INDEX_DELAY_SECS, move || {
+            let (tx, rx) = async_channel::bounded(1);
+            std::thread::spawn(move || {
+                let started = Instant::now();
+                let _ = tx.send_blocking(History::build_index(&path).map(|()| started.elapsed()));
+            });
+            glib::spawn_future_local(async move {
+                let Ok(result) = rx.recv().await else { return };
+                match result {
+                    Ok(took) => {
+                        log!("history: index built in {} ms", took.as_millis());
+                        if let Some(h) = weak.upgrade().as_ref().and_then(|s| s.history.as_ref()) {
+                            h.use_index();
+                        }
+                    }
+                    Err(e) => eprintln!("bare: history: cannot build the search index: {e}"),
+                }
+            });
+        });
+    }
+
+    /// The tab count in the URL bar, shown only while the sidebar (which lists the tabs) is hidden.
+    fn sync_badge(&self) {
+        self.bar
+            .set_tab_count(self.order.borrow().len(), !self.sidebar.widget.is_visible());
+    }
+
+    /// Redraw the sidebar after the tree changed shape (a tab opened, closed, folded).
+    fn sync_tree(&self) {
+        let rows = self.order.borrow().rows();
+        self.sidebar
+            .set(&rows, |id| self.tab_label(id), self.active_id());
+        log!(
+            "tree: {}",
+            rows.iter()
+                .map(|r| match r.hidden {
+                    0 => format!("{}{}", r.prefix, r.id),
+                    n => format!("{}{} +{n}", r.prefix, r.id),
+                })
+                .collect::<Vec<_>>()
+                .join(" | ")
+        );
+    }
+
+    /// Update one tab's line in the sidebar (its title, or whether it is unloaded).
+    fn sync_row(&self, tab: &Tab) {
+        self.sidebar.update(tab.id, &label(tab));
+    }
+
+    /// What the sidebar shows for tab `id`.
+    fn tab_label(&self, id: TabId) -> sidebar::Label {
+        match self.tab(id) {
+            Some(tab) => label(&tab),
+            None => sidebar::Label {
+                title: String::new(),
+                url: String::new(),
+                discarded: false,
+            },
+        }
+    }
+
+    /// F1: show or hide the sidebar. Remembered with the window size.
+    fn toggle_sidebar(&self) {
+        let show = !self.sidebar.widget.is_visible();
+        if !show {
+            self.sidebar_width.set(self.paned.position());
+        }
+        self.sidebar.widget.set_visible(show);
+        if show {
+            self.paned.set_position(self.sidebar_width.get());
+            self.sidebar.reveal_active();
+        }
+        self.sidebar_wanted.set(show);
+        self.sync_badge();
+        log!("sidebar: {}", if show { "shown" } else { "hidden" });
     }
 
     fn sync_progress(&self, tab: &Tab) {
@@ -342,6 +478,24 @@ impl Inner {
     fn focus_bar(&self) {
         self.revealer.set_reveal_child(true);
         self.bar.focus();
+    }
+}
+
+/// A tab's line in the sidebar: its title, else its address, else "New tab".
+fn label(tab: &Tab) -> sidebar::Label {
+    let url = tab.url.borrow();
+    let title = tab.title.borrow();
+    let home = is_home(&url);
+    sidebar::Label {
+        title: if !title.is_empty() {
+            title.clone()
+        } else if home {
+            "New tab".to_string()
+        } else {
+            pretty_url(&url)
+        },
+        url: if home { String::new() } else { url.clone() },
+        discarded: tab.view.borrow().is_none() && !home,
     }
 }
 

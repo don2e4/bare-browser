@@ -1,4 +1,4 @@
-.TH BARE 1 "October 2026" "Bare 0.1.0" "User Commands"
+.TH BARE 1 "October 2026" "Bare 0.2.0" "User Commands"
 .SH NAME
 bare \- a web browser with no title bar
 .SH SYNOPSIS
@@ -7,13 +7,19 @@ bare \- a web browser with no title bar
 .br
 .B bare \-\-update\-filters
 .SH DESCRIPTION
-Bare opens a window with no title bar: one slim address bar above the page. A single argument is
+Bare opens a window with no title bar: one slim address bar above the page, and a sidebar on the left
+that shows the open tabs as a tree, like \fBtree\fR(1): a tab opened from a link in another tab
+(a link that opens a new window, a middle-click or a Ctrl+click) sits under that tab. A single argument is
 opened as typed in the address bar (an address, an existing file, or a search); several arguments that
 are all addresses or files open one tab each; anything else is searched for as one phrase. If Bare is
 already running, the pages open as new tabs in that window.
 .PP
-Move the window by dragging the address bar (before you edit it) or the empty new-tab page; resize it
-from any edge or corner; or hold Alt and drag anywhere.
+Move the window by dragging the address bar (before you edit it), the empty new-tab page or the empty
+space under the tabs; resize it from any edge or corner; or hold Alt and drag anywhere.
+.PP
+In the sidebar, click a tab to switch to it, middle-click it to close it, and double-click a tab with
+tabs under it to fold them away (it then shows how many, \fB+3\fR; click that to unfold). Closing a tab
+moves the tabs under it up a level.
 .SH OPTIONS
 .TP
 .B \-\-update\-filters
@@ -34,10 +40,15 @@ Print the version.
 Focus the address bar. With nothing typed it lists the other tabs.
 .TP
 .B Ctrl+T, Ctrl+W, Ctrl+Shift+T
-New tab, close tab, reopen the last closed tab.
+New top-level tab, close tab, reopen the last closed tab (under the tab it was under, if that is
+still open).
 .TP
 .B Ctrl+Tab, Ctrl+Shift+Tab, Alt+1 ... Alt+9
-Next and previous tab; jump to a tab (Alt+9 is the last).
+Next and previous tab down the tree; jump to the first to eighth line of the sidebar (Alt+9 is the
+last). Folded tabs are skipped.
+.TP
+.B F1
+Show or hide the tab sidebar (remembered).
 .TP
 .B Ctrl+D
 Bookmark the page, or remove its bookmark.

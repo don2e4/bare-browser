@@ -1,4 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Bare: a plain white B, no background. Made for dark panels. -->
-  <path fill="#fff" fill-rule="evenodd" transform="translate(1.5 0)" d="M33 16H65A22 22 0 0 1 65 60H69A26 26 0 0 1 69 112H33Z M53 34H61A8 9 0 0 1 61 52H53Z M53 68H65A13 13 0 0 1 65 94H53Z"/>
+  <!-- Bare: a frameless window. A page with one thin bar on top and nothing else, on a dark tile
+       that reads on light and dark panels alike. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#363d47"/>
+      <stop offset="1" stop-color="#1b1f25"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#tile)"/>
+  <rect x="8.5" y="8.5" width="111" height="111" rx="25.5" fill="none" stroke="#000" stroke-opacity=".25"/>
+  <rect x="20" y="24" width="88" height="80" rx="8" fill="#f6f7f9"/>
+  <path fill="#3584e4" d="M28 24h72a8 8 0 0 1 8 8H20a8 8 0 0 1 8-8z"/>
 </svg>

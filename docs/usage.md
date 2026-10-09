@@ -8,9 +8,10 @@ hands the pages to that window as new tabs. `man bare` has the same in man-page 
 
 There is no title bar, so:
 
-- **Move:** drag the URL bar (until you've started editing the address: then a drag selects text), or the
-  empty new-tab page, or either end of the bar. Hold **Alt** and drag anywhere also works (and is the only
-  way with `chrome = "hidden"`, or in a page that fills the window).
+- **Move:** drag the URL bar (until you've started editing the address: then a drag selects text), the
+  empty new-tab page, the empty space under the tabs in the sidebar, or either end of the bar. Hold
+  **Alt** and drag anywhere also works (and is the only way with `chrome = "hidden"`, or in a page that
+  fills the window).
 - **Resize:** drag any edge or corner.
 - **Maximize:** double-click either end of the URL bar. Fullscreen is F11.
 
@@ -21,9 +22,10 @@ There is no title bar, so:
 | Ctrl+L, Ctrl+K, F6 | focus the URL bar (all selected); with nothing typed it lists your other tabs |
 | ↓ ↑ (or Ctrl+N/P) in the bar | move through suggestions; Enter opens one, Alt+Enter in a new tab |
 | Enter / Esc (in the bar) | go / give up and return to the page |
-| Ctrl+T / Ctrl+W / Ctrl+Shift+T | new tab / close tab / reopen the last closed tab |
-| Ctrl+Tab, Ctrl+Shift+Tab | next / previous tab (opening order) |
-| Alt+1 … Alt+8, Alt+9 | jump to tab 1…8 / the last tab |
+| Ctrl+T / Ctrl+W / Ctrl+Shift+T | new top-level tab / close tab / reopen the last closed tab (under its old parent, if that is still open) |
+| Ctrl+Tab, Ctrl+Shift+Tab | next / previous tab, down / up the tab tree (folded tabs are skipped) |
+| Alt+1 … Alt+8, Alt+9 | jump to line 1…8 of the tab tree / the last line |
+| F1 | show / hide the tab tree on the left (remembered) |
 | Ctrl+D | bookmark this page / remove the bookmark |
 | Ctrl+F, F3 / Shift+F3 (or Ctrl+G) | find in page / next / previous match; Esc closes |
 | Alt+← / Alt+→, mouse back/forward | back / forward |
@@ -32,9 +34,36 @@ There is no title bar, so:
 | F11 | fullscreen (hides the bar) |
 | Ctrl+Q | quit |
 
-Links that open a new window (`target=_blank`, middle-click) open as tabs; Ctrl+click or middle-click
-opens one behind the current tab. There is no tab strip: a small count at the right end of the URL
-bar shows that other tabs exist (click it for the switcher).
+## Tabs as a tree
+
+There is no tab strip. A sidebar on the left lists the open tabs the way the `tree` command lists files:
+
+```
+Rust Programming Language
+├── The Book
+│   └── Ownership
+└── Install Rust
+GTK 4 docs
+└── Gtk.Widget
+```
+
+A tab opened from a link in another tab is a **subtab** of it: links that open a new window
+(`target=_blank`, `window.open` after a click), middle-click and Ctrl+click on a link, and results
+opened from Bare Search with Shift+Enter or Ctrl+Enter. Middle-click and Ctrl+click open the subtab
+behind the current tab; the others bring it forward. A new subtab goes after its older siblings.
+Everything else starts a new top-level tab at the bottom: Ctrl+T, Alt+Enter in the URL bar, and pages
+handed to Bare from the command line or another program.
+
+In the sidebar: click a tab to switch to it, middle-click to close it, and double-click a tab that has
+subtabs to fold them away. A folded tab shows how many tabs it hides (`+3`); click that to unfold, or
+just switch to one of them (from the URL bar, say) and its branch opens. Closing a tab moves its subtabs
+up a level, into its place, so nothing closes that you didn't close. Unloaded (discarded) tabs are
+dimmed. Drag the sidebar's edge to make it wider or narrower.
+
+F1 hides the sidebar for a page-only window (it is also hidden in fullscreen, and starts hidden with
+`chrome = "hidden"`). While it is hidden, a small count at the right end of the URL bar shows that other
+tabs exist; click it for the switcher. The URL bar is a tab switcher either way: with nothing typed it
+lists your other tabs.
 
 ## The URL bar and Bare Search
 
@@ -66,7 +95,7 @@ filter_updates = true # fetch the full filter lists by itself, and again when a 
 instance = "https://searx.example"   # optional: ask this SearXNG instance when the built-in engines come up short
 ```
 
-Files live in `~/.config/bare` (`config.toml`, `bookmarks.txt`, window size), `~/.local/share/bare`
+Files live in `~/.config/bare` (`config.toml`, `bookmarks.txt`, `window`: size and sidebar), `~/.local/share/bare`
 (`history.sqlite`, cookies, site data) and `~/.cache/bare`. **Bookmarks are a plain text file**, one
 `url title` per line; edit it by hand (comments starting with `#` are kept). The SearXNG instance must
 have its JSON format enabled, which many public instances turn off; Bare says so (`searxng blocked`)

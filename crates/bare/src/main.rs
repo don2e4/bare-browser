@@ -2,6 +2,7 @@ mod dropdown;
 mod filters;
 mod findbar;
 mod permissions;
+mod sidebar;
 mod tabs;
 mod update;
 mod urlbar;
@@ -33,7 +34,8 @@ pub(crate) fn logging() -> bool {
 pub(crate) static STARTED: std::sync::LazyLock<std::time::Instant> =
     std::sync::LazyLock::new(std::time::Instant::now);
 
-const APP_ID: &str = "app.bare.Browser";
+pub(crate) const APP_ID: &str = "app.bare.Browser";
+const APP_ID_C: &std::ffi::CStr = c"app.bare.Browser";
 
 const HELP: &str = "\
 bare - a web browser with no title bar
@@ -103,6 +105,13 @@ fn main() -> glib::ExitCode {
         browser.show(start);
         glib::ExitCode::SUCCESS
     });
+    // GtkApplication's start-up asks the icon theme whether it has an icon named after the app, and
+    // that question waits for the whole theme to load: 190 ms with a big one like Papirus, all before
+    // the window exists. It isn't asked when a default icon is already named, so name one here (GTK
+    // isn't initialized yet, which the safe binding insists on; this only stores the name). The
+    // window gets its icon once it is on screen, by when the theme has loaded in the background.
+    // SAFETY: a NUL-terminated string that GTK copies.
+    unsafe { gtk4::ffi::gtk_window_set_default_icon_name(APP_ID_C.as_ptr()) };
     app.run()
 }
 

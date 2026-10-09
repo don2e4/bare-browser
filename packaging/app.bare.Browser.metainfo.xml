@@ -8,7 +8,8 @@
   <description>
     <p>
       Bare is a small web browser built on WebKitGTK. Its window has no title bar and no tab strip: one
-      slim address bar sits above the page, and that is all the chrome there is.
+      slim address bar sits above the page, and a sidebar shows the open tabs as a tree, with a tab
+      opened from a link under the tab it came from. F1 hides the sidebar.
     </p>
     <p>
       It has its own search, derived from SearXNG and built in, so there is no search server to run. It
@@ -26,6 +27,15 @@
   </categories>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.2.0" date="2026-10-09">
+      <description>
+        <p>Tabs as a tree in a sidebar, a new icon, a much faster start-up and faster history search.</p>
+        <p>Middle-click and Ctrl+click on a link now open it in a new tab behind the current one; on most
+        links they used to open it in the current tab.</p>
+        <p>The first start after the upgrade indexes the history in the background, which takes a few
+        seconds for a large one.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-10-03"/>
   </releases>
 </component>

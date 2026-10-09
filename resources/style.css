@@ -24,7 +24,19 @@ progressbar.bare-progress.loading { opacity: 1; transition: none; }
 progressbar.bare-progress trough { min-height: 2px; background: transparent; border: none; box-shadow: none; }
 progressbar.bare-progress progress { min-height: 2px; border-radius: 0; background: @theme_selected_bg_color; }
 
-/* Open-tab count: there is no tab strip, so this is the only sign that other tabs exist. */
+/* The tab tree on the left (F1). A tab opened from a link sits under the tab it came from. */
+paned.bare-paned > separator { min-width: 1px; background: alpha(@theme_fg_color, 0.08); }
+box.bare-sidebar { background: @theme_bg_color; }
+box.bare-tabs { padding: 4px 0; }
+box.bare-tab { min-height: 24px; padding: 0 8px 0 6px; margin: 0 4px; border-radius: 5px; }
+box.bare-tab:hover { background: alpha(@theme_fg_color, 0.07); }
+box.bare-tab.active { background: alpha(@theme_selected_bg_color, 0.22); }
+box.bare-tab label { color: @theme_fg_color; font-size: 13px; }
+box.bare-tab .bare-tree { color: @theme_fg_color; }
+box.bare-tab label.bare-folded { font: 11px monospace; opacity: 0.6; margin-left: 6px; }
+box.bare-tab.discarded label { opacity: 0.5; }
+
+/* Open-tab count, shown while the sidebar is hidden: then it is the only sign that other tabs exist. */
 label.bare-badge { font: 11px monospace; color: @theme_text_color; opacity: 0.55; margin: 0 4px; }
 label.bare-badge:hover { opacity: 1; }
 
